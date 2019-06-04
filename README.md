@@ -1,6 +1,6 @@
 ## NetQuery: Learning to Query Complex Networks
 
-#### Maintainer: William L. Hamilton (wleif@stanford.edu)
+#### A fork from William L. Hamilton repositry
 
 Code for making predictions about logical queries using network embeddings and for 
 reproducing the results of the paper "Querying Complex Networks in Vector Space."
