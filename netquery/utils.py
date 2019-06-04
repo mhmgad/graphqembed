@@ -66,6 +66,41 @@ def eval_auc_queries(test_queries, enc_dec, batch_size=1000, hard_negatives=Fals
     overall_auc = roc_auc_score(labels, np.nan_to_num(predictions))
     return overall_auc, formula_aucs
 
+def predict(test_queries, enc_dec, batch_size=1000, hard_negatives=False, seed=0):
+    predictions = []
+    labels = []
+    out_queries=[]
+    random.seed(seed)
+    for formula in test_queries:
+        formula_labels = []
+        formula_predictions = []
+        formula_queries = test_queries[formula]
+        offset = 0
+        while offset < len(formula_queries):
+            max_index = min(offset+batch_size, len(formula_queries))
+            batch_queries = formula_queries[offset:max_index]
+            if hard_negatives:
+                lengths = [1 for j in range(offset, max_index)]
+                negatives = [random.choice(formula_queries[j].hard_neg_samples) for j in xrange(offset, max_index)]
+            else:
+                lengths = [1 for j in range(offset, max_index)]
+                negatives = [random.choice(formula_queries[j].neg_samples) for j  in xrange(offset, max_index)]
+            offset += batch_size
+
+            formula_labels.extend([1 for _ in xrange(len(lengths))])
+            formula_labels.extend([0 for _ in xrange(len(negatives))])
+            batch_scores = enc_dec.forward(formula, 
+                    batch_queries+[b for i, b in enumerate(batch_queries) for _ in range(lengths[i])], 
+                    [q.target_node for q in batch_queries] + negatives)
+            batch_scores = batch_scores.data.tolist()
+            formula_predictions.extend(batch_scores)
+
+        out_queries.extend(formula_queries)
+        labels.extend(formula_labels)
+        predictions.extend(formula_predictions)
+    labelsAndPredictions=zip(out_queries,labels,predictions)
+    return labelsAndPredictions
+
     
 def eval_perc_queries(test_queries, enc_dec, batch_size=1000, hard_negatives=False):
     perc_scores = []

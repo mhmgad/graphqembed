@@ -30,7 +30,9 @@ def load_test_queries_by_formula(data_file):
             "one_neg" : defaultdict(lambda : defaultdict(list))}
     for raw_query in raw_info:
         neg_type = "full_neg" if len(raw_query[1]) > 1 else "one_neg"
-        query = Query.deserialize(raw_query)
+        #TODO Gad: I have changed keep_graph to True to keeep the nodes
+        print raw_query
+        query = Query.deserialize(raw_query,keep_graph=True)
         queries[neg_type][query.formula.query_type][query.formula].append(query)
     return queries
 

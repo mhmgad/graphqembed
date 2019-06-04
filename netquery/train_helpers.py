@@ -1,5 +1,5 @@
 import numpy as np
-from utils import eval_auc_queries, eval_perc_queries
+from utils import eval_auc_queries, eval_perc_queries,predict
 import torch
 
 def check_conv(vals, window=2, tol=1e-6):
@@ -35,6 +35,18 @@ def run_eval(model, queries, iteration, logger, by_type=False):
             if by_type:
                 _print_by_rel(rel_aucs, logger)
             vals[query_type + "hard"] = auc
+    return vals
+
+
+def run_predict(model, queries, by_type=False):
+    vals = {}
+
+    for query_type in queries["one_neg"]:
+        labelsAndPredictions= predict(queries["one_neg"][query_type], model)
+        vals[query_type] = labelsAndPredictions
+        if "inter" in query_type:
+            labelsAndPredictions= predict(queries["one_neg"][query_type], model, hard_negatives=True)
+            vals[query_type + "hard"] = labelsAndPredictions
     return vals
 
 def run_train(model, optimizer, train_queries, val_queries, test_queries, logger,
@@ -74,7 +86,7 @@ def run_train(model, optimizer, train_queries, val_queries, test_queries, logger
                     logger.info("Fully converged at iteration {:d}".format(i))
                     break
 
-        losses, ema_loss = update_loss(loss.data[0], losses, ema_loss)
+        losses, ema_loss = update_loss(loss.item(), losses, ema_loss)
         loss.backward()
         optimizer.step()
             
